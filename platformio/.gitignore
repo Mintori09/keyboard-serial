@@ -1,4 +1,23 @@
-.pio
-.clang_complete
-.gcc-flags.json
-.ccls
+# PlatformIO build folder
+.pio/
+
+# VSCode
+.vscode/
+
+# CLion / CLion+PlatformIO
+.idea/
+
+# Auto-generated compile_commands
+compile_commands.json
+gen_compile_commands.py
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.swp
+*.swo
+*~
+
+
