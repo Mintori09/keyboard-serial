@@ -1,3 +1,4 @@
+use device_query::{DeviceQuery, DeviceState, Keycode};
 use serialport::{SerialPortType, available_ports};
 use std::io::{BufRead, BufReader};
 use std::process::Command;
@@ -63,6 +64,15 @@ fn run_app(cmd: &str) {
     }
 }
 
+/// Gọi wtype để gõ chuỗi git command
+fn wtype_git_command(message: &str) {
+    let git_cmd = format!("git add . && git commit -m \"{}\" && git push", message);
+
+    let _ = Command::new("wtype")
+        .args(&["-s", "20", &git_cmd]) // -s 20 = delay 20ms mỗi ký tự
+        .status();
+}
+
 /// Map sự kiện
 fn handle_event(event: &str, key: &str) {
     match event {
@@ -81,8 +91,11 @@ fn handle_event(event: &str, key: &str) {
 fn handle_key_hold(key: &str) {
     if cfg!(target_os = "linux") {
         match key {
-            "0" => run_app(". ~/.config/shell/apikey.sh && echo \"$GEMINI_API_KEY\""),
-            "#" => run_command(
+            "#" => run_command("poweroff"),
+            "2" => run_command("xdg-open \"https://shopee.vn/search?keyword=$(wl-paste)\""),
+            "4" => run_command("git add . && git commit -m 'auto' && git push"),
+            "5" => run_app("alacritty -e nvim ~/Documents/Obsidian/"),
+            "0" => run_command(
                 r#"
                 . ~/.config/shell/apikey.sh &&
                 curl -s -H "Authorization: Bearer $HASS_TOKEN" \
@@ -112,7 +125,6 @@ fn handle_key_hold(key: &str) {
     }
 }
 
-/// Xử lý hành động theo phím
 fn handle_key(key: &str) {
     if cfg!(target_os = "linux") {
         match key {
@@ -120,7 +132,9 @@ fn handle_key(key: &str) {
             "2" => run_command("xdg-open \"https://www.google.com/search?q=$(wl-paste)\""),
             "3" => run_command("qdbus org.kde.KWin /KWin org.kde.KWin.nextDesktop"),
             "4" => run_app("alacritty"),
-            "5" => run_app("alacritty -e nvim"),
+            "5" => run_app(
+                "sh -c 'tmp=$(mktemp /tmp/clipXXXX.md); wl-paste > $tmp; alacritty -e nvim -c \"autocmd VimLeave * call delete(\\\"$tmp\\\")\" $tmp'",
+            ),
             "6" => run_command("qdbus org.kde.KWin /KWin org.kde.KWin.previousDesktop"),
             "7" => run_command("xdg-open \"https://www.youtube.com/\""),
             "8" => run_command("xdg-open \"https://onedrive.live.com/?view=0\""),
