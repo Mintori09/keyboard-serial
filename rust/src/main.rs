@@ -1,4 +1,3 @@
-use device_query::{DeviceQuery, DeviceState, Keycode};
 use serialport::{SerialPortType, available_ports};
 use std::io::{BufRead, BufReader};
 use std::process::Command;
@@ -64,15 +63,6 @@ fn run_app(cmd: &str) {
     }
 }
 
-/// Gọi wtype để gõ chuỗi git command
-fn wtype_git_command(message: &str) {
-    let git_cmd = format!("git add . && git commit -m \"{}\" && git push", message);
-
-    let _ = Command::new("wtype")
-        .args(&["-s", "20", &git_cmd]) // -s 20 = delay 20ms mỗi ký tự
-        .status();
-}
-
 /// Map sự kiện
 fn handle_event(event: &str, key: &str) {
     match event {
@@ -91,10 +81,15 @@ fn handle_event(event: &str, key: &str) {
 fn handle_key_hold(key: &str) {
     if cfg!(target_os = "linux") {
         match key {
-            "#" => run_command("poweroff"),
+            "1" => {
+                run_command("ydotool type \"git add . && git commit -m \'Update\' && git push\"")
+            }
             "2" => run_command("xdg-open \"https://shopee.vn/search?keyword=$(wl-paste)\""),
-            "4" => run_command("git add . && git commit -m 'auto' && git push"),
-            "5" => run_app("alacritty -e nvim ~/Documents/Obsidian/"),
+            "4" => run_command("ydotool type 'git add . && git commit -m 'Upload' && git push'"),
+            "5" => run_app("alacritty -e bash -c 'cd ~/Documents/Obsidian && nvim'"),
+            "7" => {
+                run_app("xdg-open \"https://www.youtube.com/results?search_query=$( wl-paste )\"")
+            }
             "0" => run_command(
                 r#"
                 . ~/.config/shell/apikey.sh &&
@@ -104,6 +99,7 @@ fn handle_key_hold(key: &str) {
                     http://192.168.10.80:8123/api/services/input_boolean/toggle
                 "#,
             ),
+            "#" => run_command("poweroff"),
             _ => println!("[WARN] Unmapped hold key: {}", key),
         }
     } else if cfg!(target_os = "windows") {
