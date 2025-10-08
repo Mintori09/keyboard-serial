@@ -28,6 +28,9 @@ pub fn hold(key: &str) {
         ),
         "5" => run_app("kitty -e bash -c 'cd ~/Documents/Obsidian && nvim'"),
         "7" => run_app("xdg-open \"https://www.youtube.com/results?search_query=$( wl-paste )\""),
+        "8" => {
+            run_app("kitty -e zsh -c \"sh '/home/mintori/.config/rofi/launchers/install-yay.sh'\"")
+        }
         "0" => run_command(
             r#"
                 . ~/.config/shell/apikey.sh &&
