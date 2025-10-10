@@ -1,4 +1,4 @@
-use rdev::{Event, EventType, Key, listen};
+use rdev::{Event, EventType, Key};
 use std::env::temp_dir;
 use std::fs;
 use std::io::{BufRead, BufReader};
