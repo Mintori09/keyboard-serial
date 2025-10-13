@@ -23,14 +23,17 @@ pub fn hold(key: &str) {
     match key {
         "1" => run_command("ydotool type \"git add . && git commit -m \'Update\' && git push\""),
         "2" => run_command("xdg-open \"https://shopee.vn/search?keyword=$(wl-paste)\""),
+        "3" => run_command(""),
         "4" => run_app(
             "kitty -e zsh -c '$(wl-paste); echo; read -n 1 -s -r -p \"Press any key to exit...\"'",
         ),
         "5" => run_app("kitty -e bash -c 'cd ~/Documents/Obsidian && nvim'"),
+        "6" => run_command(""),
         "7" => run_app("xdg-open \"https://www.youtube.com/results?search_query=$( wl-paste )\""),
         "8" => {
             run_app("kitty -e zsh -c \"sh '/home/mintori/.config/rofi/launchers/install-yay.sh'\"")
         }
+        "9" => run_command(""),
         "0" => run_command(
             r#"
                 . ~/.config/shell/apikey.sh &&
