@@ -10,7 +10,7 @@ pub fn press(key: &str) {
         ),
         "6" => run_command("qdbus6 org.kde.KWin /KWin org.kde.KWin.previousDesktop"),
         "7" => run_command("xdg-open \"https://www.youtube.com/\""),
-        "8" => run_command("xdg-open \"https://onedrive.live.com/?view=0\""),
+        "8" => run_command("xdg-open \"https://drive.google.com/drive/u/0/my-drive\""),
         "9" => run_app("mpv \"$(wl-paste)\""),
         "*" => run_app("kitty -e nvim ~/Documents/[2] Obsidian"),
         "0" => run_app("/home/mintori/.config/rofi/launchers/rofi-power-menu.sh"),
