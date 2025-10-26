@@ -12,7 +12,7 @@ pub fn press(key: &str) {
         "7" => run_command("xdg-open \"https://www.youtube.com/\""),
         "8" => run_command("xdg-open \"https://onedrive.live.com/?view=0\""),
         "9" => run_app("mpv \"$(wl-paste)\""),
-        "*" => run_app("kitty -e nvim ~/Documents/Obsidian/"),
+        "*" => run_app("kitty -e nvim ~/Documents/[2] Obsidian"),
         "0" => run_app("/home/mintori/.config/rofi/launchers/rofi-power-menu.sh"),
         "#" => run_command("qdbus6 org.freedesktop.ScreenSaver /ScreenSaver Lock"),
         _ => println!("[WARN] Unmapped key: {}", key),
@@ -27,7 +27,7 @@ pub fn hold(key: &str) {
         "4" => run_app(
             "kitty -e zsh -c '$(wl-paste); echo; read -n 1 -s -r -p \"Press any key to exit...\"'",
         ),
-        "5" => run_app("kitty -e bash -c 'cd ~/Documents/Obsidian && nvim'"),
+        "5" => run_app(r#"kitty -e zsh -lc 'cd "$HOME/Documents/[2] Obsidian" && nvim'"#),
         "6" => run_command(""),
         "7" => run_app("xdg-open \"https://www.youtube.com/results?search_query=$( wl-paste )\""),
         "8" => {
