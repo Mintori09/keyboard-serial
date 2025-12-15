@@ -2,7 +2,21 @@
 name = "keyboard-rs"
 version = "0.1.0"
 edition = "2024"
+description = "A brief description of my Rust application for RPM package." 
+license = "MIT" 
 
 [dependencies]
 rdev = "0.5.3"
 serialport = "4.7.3"
+ksni = { version = "0.3", features = ["blocking"] }
+serde = "1.0.228"
+serde_json = "1.0.145"
+
+[package.metadata.rpm]
+package = "keyboard-rs"
+
+[package.metadata.rpm.cargo]
+buildflags = ["--release"]
+
+[package.metadata.rpm.targets]
+keyboard-rs = { path = "/usr/bin/keyboard-rs" }

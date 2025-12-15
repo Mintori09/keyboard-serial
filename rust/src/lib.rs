@@ -1,5 +1,6 @@
-pub mod linux;
-pub mod windows;
+pub mod helper;
+pub mod system_tray;
+pub mod types;
 use serialport::{SerialPortType, available_ports};
 use std::process::Command;
 
