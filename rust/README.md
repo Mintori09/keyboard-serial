@@ -99,3 +99,22 @@ Current integration test reads live config from `~/.config/keyboard-rs/config.js
 ## Package (RPM metadata present)
 
 Project includes RPM metadata in `Cargo.toml` under `[package.metadata.rpm]`.
+
+## systemd
+
+A user service unit is provided at `systemd/user/keyboard-rs.service`.
+
+Install and start it:
+
+```bash
+mkdir -p ~/.config/systemd/user
+cp systemd/user/keyboard-rs.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now keyboard-rs.service
+```
+
+Check logs:
+
+```bash
+journalctl --user -u keyboard-rs.service -f
+```
