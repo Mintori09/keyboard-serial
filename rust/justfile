@@ -1,0 +1,23 @@
+set shell := ["bash", "-cu"]
+
+build:
+	cargo build --release --bins
+
+run:
+	cargo run --release
+
+install:
+	install -Dm755 target/release/keyboard-rs "$HOME/.local/bin/keyboard-rs"
+	install -Dm755 target/release/keyboard-rs-config "$HOME/.local/bin/keyboard-rs-config"
+	install -Dm644 keyboard-rs-config.desktop "$HOME/.local/share/applications/keyboard-rs-config.desktop"
+	mkdir -p "$HOME/.config/systemd/user"
+	cp systemd/user/keyboard-rs.service "$HOME/.config/systemd/user/keyboard-rs.service"
+	systemctl --user daemon-reload
+
+uninstall:
+	rm -f "$HOME/.local/bin/keyboard-rs"
+	rm -f "$HOME/.local/bin/keyboard-rs-config"
+	rm -f "$HOME/.local/share/applications/keyboard-rs-config.desktop"
+	systemctl --user disable --now keyboard-rs.service || true
+	rm -f "$HOME/.config/systemd/user/keyboard-rs.service"
+	systemctl --user daemon-reload

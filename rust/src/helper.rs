@@ -50,23 +50,21 @@ pub fn read_serial_loop(
     }
 }
 
-pub fn handle_serial_line(line: &str, option: usize) {
+pub fn handle_serial_line(line: &str, selected_profile_index: usize) {
     init_macros();
 
     if let Some((event, key)) = line.split_once(':') {
-        let mode = if option == 1 { "anki" } else { "normal" };
         let normalized_event = event.to_uppercase();
 
-        println!("[DEBUG] {}:{}:{}", normalized_event, key, mode);
+        println!(
+            "[DEBUG] {}:{}:profile-{}",
+            normalized_event, key, selected_profile_index
+        );
 
-        if normalized_event == "HOLD" && option == 0 {
-            run_macro(MacroType::Hold, key);
+        if normalized_event == "HOLD" {
+            run_profile_macro(selected_profile_index, MacroType::Hold, key);
         } else if normalized_event == "PRESS" {
-            match option {
-                0 => run_macro(MacroType::Press, key),
-                1 => run_macro(MacroType::Anki, key),
-                _ => println!("[WARN] Unhandled option {} in PRESS event.", option),
-            }
+            run_profile_macro(selected_profile_index, MacroType::Press, key);
         } else {
             println!("[WARN] Unhandled event type: {}", normalized_event);
         }
@@ -104,13 +102,12 @@ pub fn run_vim_anywhere() {
     let mut tmpfile: PathBuf = temp_dir();
     tmpfile.push(format!("vim-anywhere-{}.txt", std::process::id()));
 
-    // Mở kitty + nvim
     let mut child = Command::new("kitty")
         .arg("-e")
         .arg("nvim")
         .arg(&tmpfile)
         .spawn()
-        .expect("Không mở được kitty/nvim");
+        .expect("Cannot open kitty/nvim");
     let _ = child.wait();
 
     if let Ok(mut content) = fs::read_to_string(&tmpfile) {
@@ -122,7 +119,7 @@ pub fn run_vim_anywhere() {
             let mut wl = Command::new("wl-copy")
                 .stdin(std::process::Stdio::piped())
                 .spawn()
-                .expect("Không chạy được wl-copy");
+                .expect("Cannot run wl-copy");
 
             use std::io::Write;
             if let Some(stdin) = wl.stdin.as_mut() {
@@ -131,7 +128,7 @@ pub fn run_vim_anywhere() {
             let _ = wl.wait();
 
             let _ = Command::new("ydotool")
-                .args(&["key", "29:1", "47:1", "47:0", "29:0"])
+                .args(["key", "29:1", "47:1", "47:0", "29:0"])
                 .status();
         }
     }

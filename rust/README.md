@@ -4,33 +4,28 @@ Rust app that listens to:
 
 - serial input (from keyboard/microcontroller)
 - global keyboard hotkeys
-- system tray mode switching
+- system tray profile switching
 
 It executes shell commands mapped from keys in a JSON config file.
 
 ## Features
 
 - Auto-detect serial port (USB preferred), open at `9600` baud
-- Parse serial lines in format `EVENT:KEY` (example: `PRESS:K1`)
-- Two tray modes:
-  - `Normal`: uses `press_macros`
-  - `Anki`: uses `anki_macros`
-- `HOLD` events run `hold_macros` in `Normal` mode
-- Global hotkey `Ctrl+Alt+I` launches "vim anywhere" flow:
-  - opens `kitty -e nvim <tempfile>`
-  - copies text with `wl-copy`
-  - pastes via `ydotool`
+- Parse serial lines in format `EVENT:KEY` (example: `PRESS:1`)
+- Profile-based macros:
+  - each profile has fixed keys: `0-9`, `*`, `#`
+  - each profile has both `press_macros` and `hold_macros`
+  - keys are fixed; only command strings are edited
+- Tray menu can open GTK configurator (`Configure...`)
+- Live apply: configurator saves config and sends `SIGHUP` to daemon PID
+- Global hotkey `Ctrl+Alt+I` launches "vim anywhere" flow
 
 ## Requirements
 
 - Rust toolchain
 - Linux desktop with tray support (for `ksni`)
+- GTK4 runtime/dev packages (for `keyboard-rs-config`)
 - Serial device
-- Commands used by optional hotkey flow:
-  - `kitty`
-  - `nvim`
-  - `wl-copy`
-  - `ydotool`
 
 ## Configuration
 
@@ -38,26 +33,51 @@ Config path:
 
 `~/.config/keyboard-rs/config.json`
 
-Example:
+Current schema:
 
 ```json
 {
-  "press_macros": [
-    { "key": "K1", "command": "xdotool key ctrl+c" }
-  ],
-  "anki_macros": [
-    { "key": "K1", "command": "xdotool key 1" }
-  ],
-  "hold_macros": [
-    { "key": "K2", "command": "playerctl play-pause" }
+  "profiles": [
+    {
+      "name": "Normal",
+      "press_macros": [
+        { "key": "0", "command": "" },
+        { "key": "1", "command": "" },
+        { "key": "2", "command": "" },
+        { "key": "3", "command": "" },
+        { "key": "4", "command": "" },
+        { "key": "5", "command": "" },
+        { "key": "6", "command": "" },
+        { "key": "7", "command": "" },
+        { "key": "8", "command": "" },
+        { "key": "9", "command": "" },
+        { "key": "*", "command": "" },
+        { "key": "#", "command": "" }
+      ],
+      "hold_macros": [
+        { "key": "0", "command": "" },
+        { "key": "1", "command": "" },
+        { "key": "2", "command": "" },
+        { "key": "3", "command": "" },
+        { "key": "4", "command": "" },
+        { "key": "5", "command": "" },
+        { "key": "6", "command": "" },
+        { "key": "7", "command": "" },
+        { "key": "8", "command": "" },
+        { "key": "9", "command": "" },
+        { "key": "*", "command": "" },
+        { "key": "#", "command": "" }
+      ]
+    }
   ]
 }
 ```
 
 Notes:
 
-- Missing/invalid config loads as empty macro sets.
-- Commands are executed with shell (`sh -c` on Linux).
+- Legacy schema is auto-migrated when loaded.
+- `_default` fallback is removed.
+- Keys are normalized to fixed set `0-9`, `*`, `#`.
 
 ## Serial Protocol
 
@@ -72,21 +92,33 @@ Supported events:
 
 Routing:
 
-- `PRESS` + `Normal` mode -> `press_macros`
-- `PRESS` + `Anki` mode -> `anki_macros`
-- `HOLD` + `Normal` mode -> `hold_macros`
+- `PRESS` -> selected profile `press_macros`
+- `HOLD` -> selected profile `hold_macros`
 
 ## Run
+
+Run daemon:
 
 ```bash
 cargo run --release
 ```
 
-On startup, app:
+Run GTK configurator:
 
-1. Detects and opens serial port
-2. Starts global keyboard listener thread
-3. Starts tray app for mode switch / exit
+```bash
+cargo run --release --bin keyboard-rs-config
+```
+
+## Configurator Apply Behavior
+
+`Apply` in GTK app:
+
+1. Validates profile names
+2. Normalizes fixed key layout (`0-9`, `*`, `#`)
+3. Saves `config.json`
+4. Sends `SIGHUP` to PID from `/tmp/keyboard-rs.pid`
+
+If step 4 fails, config is still saved and a warning is shown.
 
 ## Test
 
@@ -94,27 +126,20 @@ On startup, app:
 cargo test
 ```
 
-Current integration test reads live config from `~/.config/keyboard-rs/config.json`.
+## Desktop Launcher
 
-## Package (RPM metadata present)
+Template file in repo:
 
-Project includes RPM metadata in `Cargo.toml` under `[package.metadata.rpm]`.
+`keyboard-rs-config.desktop`
+
+Install for current user:
+
+```bash
+mkdir -p ~/.local/share/applications
+cp keyboard-rs-config.desktop ~/.local/share/applications/
+update-desktop-database ~/.local/share/applications 2>/dev/null || true
+```
 
 ## systemd
 
 A user service unit is provided at `systemd/user/keyboard-rs.service`.
-
-Install and start it:
-
-```bash
-mkdir -p ~/.config/systemd/user
-cp systemd/user/keyboard-rs.service ~/.config/systemd/user/
-systemctl --user daemon-reload
-systemctl --user enable --now keyboard-rs.service
-```
-
-Check logs:
-
-```bash
-journalctl --user -u keyboard-rs.service -f
-```

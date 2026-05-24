@@ -1,0 +1,10 @@
+[Unit]
+Description=Keyboard serial macro daemon
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/home/mintori/.local/bin/keyboard-rs
+
+[Install]
+WantedBy=default.target

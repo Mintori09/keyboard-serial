@@ -1,58 +1,30 @@
-use std::env::home_dir;
 use std::fs;
-use std::path::PathBuf;
 
-use keyboard_rs::types::MacroConfig;
-
-fn get_expected_config_path() -> PathBuf {
-    home_dir()
-        .expect("Không tìm thấy thư mục Home")
-        .join(".config")
-        .join("keyboard-rs")
-        .join("config.json")
-}
+use keyboard_rs::types::load_config_from_disk;
 
 #[test]
 fn integration_test_read_live_config() {
-    let config_path = get_expected_config_path();
+    let content = load_config_from_disk().expect("Không thể đọc config từ disk");
 
-    if !config_path.exists() {
-        panic!(
-            "Kiểm thử thất bại: File cấu hình không tồn tại tại {}",
-            config_path.display()
-        );
-    }
-
-    let content = match fs::read_to_string(&config_path) {
-        Ok(c) => c,
-        Err(e) => panic!(
-            "Kiểm thử thất bại: Không thể đọc file {}. Lỗi: {}",
-            config_path.display(),
-            e
-        ),
-    };
-
-    let config: MacroConfig = match serde_json::from_str(&content) {
-        Ok(cfg) => cfg,
-        Err(e) => panic!(
-            "Kiểm thử thất bại: File JSON bị lỗi định dạng tại {}. Lỗi: {}",
-            config_path.display(),
-            e
-        ),
-    };
+    let total = content
+        .profiles
+        .iter()
+        .map(|p| p.press_macros.len() + p.hold_macros.len())
+        .sum::<usize>();
 
     assert!(
-        config.press_macros.len() > 0
-            || config.anki_macros.len() > 0
-            || config.hold_macros.len() > 0,
-        "Kiểm thử thành công việc đọc file, nhưng file cấu hình không chứa macro nào."
+        !content.profiles.is_empty(),
+        "Config phải có ít nhất 1 profile"
     );
+    assert!(total > 0, "Config không chứa macro press/hold nào");
 
     println!(
-        "Kiểm thử tích hợp thành công: Đọc {} macros từ {}\n",
-        config.press_macros.len() + config.anki_macros.len() + config.hold_macros.len(),
-        config_path.display()
+        "Đọc config thành công: {} profiles, {} macro entries",
+        content.profiles.len(),
+        total
     );
 
-    // assert_eq!(config.press_macros.get("1"), Some(&"command_a".to_string()));
+    let raw = fs::read_to_string(keyboard_rs::types::config_file_path())
+        .expect("Không thể đọc raw config file");
+    let _: serde_json::Value = serde_json::from_str(&raw).expect("Raw JSON không hợp lệ");
 }

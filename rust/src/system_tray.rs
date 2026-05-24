@@ -1,14 +1,12 @@
+use crate::types::{get_profiles, set_active_profile};
 use ksni::menu::*;
+use std::process::Command;
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, atomic::AtomicUsize};
-
-const NORMAL: usize = 0;
-const ANKI: usize = 1;
 
 #[derive(Debug)]
 pub struct MyTray {
     pub selected_option: Arc<AtomicUsize>,
-    pub checked: bool,
 }
 
 impl ksni::Tray for MyTray {
@@ -21,33 +19,46 @@ impl ksni::Tray for MyTray {
     }
 
     fn title(&self) -> String {
-        match self.selected_option.load(Ordering::Relaxed) {
-            NORMAL => "NORMAL",
-            ANKI => "ANKI",
-            _ => "UNKNOWN",
-        }
-        .into()
+        let labels = get_profiles();
+        let index = self.selected_option.load(Ordering::Relaxed);
+        labels
+            .get(index)
+            .or_else(|| labels.first())
+            .map(|p| p.name.clone())
+            .unwrap_or_else(|| "UNKNOWN".to_string())
     }
 
     fn menu(&self) -> Vec<ksni::MenuItem<Self>> {
+        let labels = get_profiles();
+        let options: Vec<RadioItem> = labels
+            .iter()
+            .map(|profile| RadioItem {
+                label: profile.name.clone(),
+                ..Default::default()
+            })
+            .collect();
+
         vec![
             RadioGroup {
                 selected: self.selected_option.load(Ordering::Relaxed),
                 select: Box::new(|this: &mut MyTray, current| {
                     this.selected_option.store(current, Ordering::Relaxed);
+                    if let Err(e) = set_active_profile(current) {
+                        eprintln!("[WARN] Failed to persist active profile: {}", e);
+                    }
                     println!("[TRAY] {}", current);
                 }),
-                options: vec![
-                    RadioItem {
-                        label: "Normal".into(),
-                        ..Default::default()
-                    },
-                    RadioItem {
-                        label: "Anki".into(),
-                        ..Default::default()
-                    },
-                ],
-                // ..Default::default()
+                options,
+            }
+            .into(),
+            StandardItem {
+                label: "Configure...".into(),
+                activate: Box::new(|_| {
+                    if let Err(e) = Command::new("keyboard-rs-config").spawn() {
+                        eprintln!("[WARN] Failed to open configurator: {}", e);
+                    }
+                }),
+                ..Default::default()
             }
             .into(),
             StandardItem {
