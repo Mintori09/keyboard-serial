@@ -1,8 +1,28 @@
 use crate::types::{get_profiles, set_active_profile};
+use image::GenericImageView;
 use ksni::menu::*;
 use std::process::Command;
 use std::sync::atomic::Ordering;
-use std::sync::{Arc, atomic::AtomicUsize};
+use std::sync::{Arc, atomic::AtomicUsize, LazyLock};
+
+static ICON: LazyLock<ksni::Icon> = LazyLock::new(|| {
+    let img = image::load_from_memory_with_format(
+        include_bytes!(concat!(env!("OUT_DIR"), "/icon.png")),
+        image::ImageFormat::Png,
+    )
+    .expect("valid tray icon");
+    let (width, height) = img.dimensions();
+    let mut data = img.into_rgba8().into_vec();
+    assert_eq!(data.len() % 4, 0);
+    for pixel in data.chunks_exact_mut(4) {
+        pixel.rotate_right(1);
+    }
+    ksni::Icon {
+        width: width as i32,
+        height: height as i32,
+        data,
+    }
+});
 
 #[derive(Debug)]
 pub struct MyTray {
@@ -15,7 +35,11 @@ impl ksni::Tray for MyTray {
     }
 
     fn icon_name(&self) -> String {
-        "help-about".into()
+        String::new()
+    }
+
+    fn icon_pixmap(&self) -> Vec<ksni::Icon> {
+        vec![ICON.clone()]
     }
 
     fn title(&self) -> String {

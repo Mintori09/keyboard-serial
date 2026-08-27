@@ -13,6 +13,10 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 signal-hook = "0.3.18"
 gtk4 = "0.11.3"
+image = "0.25"
+
+[build-dependencies]
+image = "0.25"
 
 [package.metadata.rpm]
 package = "keyboard-rs"

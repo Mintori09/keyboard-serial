@@ -1,0 +1,77 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            pkg-config \
+            libgtk-4-dev \
+            libudev-dev \
+            libx11-dev \
+            libxtst-dev
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust -> rust/target
+
+      - name: Run Tests
+        working-directory: rust
+        run: cargo test --release
+
+      - name: Build Binaries
+        working-directory: rust
+        run: cargo build --release --bins
+
+      - name: Package Release Assets
+        run: |
+          VERSION="${GITHUB_REF_NAME:-latest}"
+          PKG_NAME="keyboard-rs-${VERSION}-x86_64-unknown-linux-gnu"
+          mkdir -p "dist/${PKG_NAME}"
+
+          # Copy binaries
+          cp rust/target/release/keyboard-rs "dist/${PKG_NAME}/"
+          cp rust/target/release/keyboard-rs-config "dist/${PKG_NAME}/"
+
+          # Copy assets and service files
+          cp rust/keyboard-rs-config.desktop "dist/${PKG_NAME}/"
+          cp rust/systemd/user/keyboard-rs.service "dist/${PKG_NAME}/"
+          cp rust/README.md "dist/${PKG_NAME}/"
+          cp LICENSE "dist/${PKG_NAME}/" || true
+
+          # Create tarball
+          tar -czf "dist/${PKG_NAME}.tar.gz" -C dist "${PKG_NAME}"
+
+          # Create checksums
+          cd dist
+          sha256sum "${PKG_NAME}.tar.gz" > "${PKG_NAME}.tar.gz.sha256"
+          cd ..
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            dist/*.tar.gz
+            dist/*.sha256
+          generate_release_notes: true
