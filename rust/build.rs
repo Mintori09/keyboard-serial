@@ -20,11 +20,7 @@ fn main() {
         }
     }
 
-    fn rect(
-        img: &mut image::RgbaImage,
-        x: u32, y: u32, rw: u32, rh: u32,
-        color: image::Rgba<u8>,
-    ) {
+    fn rect(img: &mut image::RgbaImage, x: u32, y: u32, rw: u32, rh: u32, color: image::Rgba<u8>) {
         for dy in 0..rh {
             for dx in 0..rw {
                 let px = x + dx;

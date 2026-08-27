@@ -24,7 +24,11 @@ fn integration_test_read_live_config() {
         total
     );
 
-    let raw = fs::read_to_string(keyboard_rs::types::config_file_path())
-        .expect("Không thể đọc raw config file");
+    let path = keyboard_rs::types::config_file_path();
+    if !path.exists() {
+        keyboard_rs::types::save_config_to_disk(&content).expect("Không thể ghi default config");
+    }
+
+    let raw = fs::read_to_string(&path).expect("Không thể đọc raw config file");
     let _: serde_json::Value = serde_json::from_str(&raw).expect("Raw JSON không hợp lệ");
 }

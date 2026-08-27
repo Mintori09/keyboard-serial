@@ -42,7 +42,7 @@ pub fn detect_serial_port() -> Option<String> {
 pub fn run_command(cmd: &str) {
     println!("[CMD] {}", cmd);
     let status = if cfg!(target_os = "windows") {
-        Command::new("cmd").args(&["/C", cmd]).status().unwrap()
+        Command::new("cmd").args(["/C", cmd]).status().unwrap()
     } else {
         Command::new("sh").arg("-c").arg(cmd).status().unwrap()
     };
@@ -51,12 +51,13 @@ pub fn run_command(cmd: &str) {
     }
 }
 
-/// Chạy ứng dụng
+/// Chạy ứng dụng (fire-and-forget)
+#[allow(clippy::zombie_processes)]
 pub fn run_app(cmd: &str) {
     println!("[APP] {}", cmd);
     if cfg!(target_os = "windows") {
-        Command::new("cmd").args(&["/C", cmd]).spawn().unwrap();
+        let _ = Command::new("cmd").args(["/C", cmd]).spawn();
     } else if cfg!(target_os = "linux") {
-        Command::new("sh").arg("-c").arg(cmd).spawn().unwrap();
+        let _ = Command::new("sh").arg("-c").arg(cmd).spawn();
     }
 }

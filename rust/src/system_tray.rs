@@ -3,7 +3,7 @@ use image::GenericImageView;
 use ksni::menu::*;
 use std::process::Command;
 use std::sync::atomic::Ordering;
-use std::sync::{Arc, atomic::AtomicUsize, LazyLock};
+use std::sync::{Arc, LazyLock, atomic::AtomicUsize};
 
 static ICON: LazyLock<ksni::Icon> = LazyLock::new(|| {
     let img = image::load_from_memory_with_format(
